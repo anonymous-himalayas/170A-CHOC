@@ -80,8 +80,94 @@ If it starts with r it is scores from 1 to 100
 If it ends with nat it represents national 
 If it ends with stt it represents state
 If it ends with met it represents metro
-There are 4 overall measurements Education Domain, Health and Environment, Social and Economic Domain, and COI which is some kind of measurement
-z_ED_nat, c5_ED_nat, r_ED_nat, c5_ED_stt, r_ED_stt, c5_ED_met, r_ED_met: Education Domain Variables
-z_HE_nat, c5_HE_nat, r_HE_nat, c5_HE_stt, r_HE_stt, c5_HE_met, r_HE_met: Health and Environment Variables
-Z_SE_nat, c5_SE_nat, r_SE_nat, c5_SE_stt, r_SE_stt, c5_SE_met, r_SE_met: Social and Economic Domain Variables
-z_COI_nat, c5_COI_nat, r_COI_nat, c5_COI_stt, r_COI_stt, c5_COI_met, r_COI_met: COI Variables
+There are 4 overall measurements Education Domain, Health and Environment, Social and Economic Domain, and COI
+1. Education Domain
+z_ED_nat
+Standardized z-score for the Education domain (national comparison)
+
+c5_ED_nat
+Education opportunity category based on national distribution
+
+r_ED_nat
+Percentile rank (1–100) for Education opportunity nationally
+
+c5_ED_stt
+Education opportunity category relative to the state
+
+r_ED_stt
+Percentile rank (1–100) for Education opportunity within the state
+
+c5_ED_met
+Education opportunity category relative to the metropolitan area
+
+r_ED_met
+Percentile rank (1–100) for Education opportunity within the metropolitan area
+
+
+2. Health and Environment Domain
+z_HE_nat
+Standardized z-score for Health and Environment opportunity (national comparison)
+
+c5_HE_nat
+Health and Environment opportunity category nationally
+
+r_HE_nat
+Percentile rank (1–100) for Health and Environment opportunity nationally
+
+c5_HE_stt
+Health and Environment opportunity category relative to the state
+
+r_HE_stt
+Percentile rank (1–100) for Health and Environment opportunity within the state
+
+c5_HE_met
+Health and Environment opportunity category relative to the metropolitan area
+
+r_HE_met
+Percentile rank (1–100) for Health and Environment opportunity within the metropolitan area
+
+
+3. Social and Economic Domain
+z_SE_nat
+Standardized z-score for Social and Economic opportunity (national comparison)
+
+c5_SE_nat
+Social and Economic opportunity category nationally
+
+r_SE_nat
+Percentile rank (1–100) for Social and Economic opportunity nationally
+
+c5_SE_stt
+Social and Economic opportunity category relative to the state
+
+r_SE_stt
+Percentile rank (1–100) for Social and Economic opportunity within the state
+
+c5_SE_met
+Social and Economic opportunity category relative to the metropolitan area
+
+r_SE_met
+Percentile rank (1–100) for Social and Economic opportunity within the metropolitan area
+
+
+4. Overall COI (Child Opportunity Index)
+z_COI_nat
+Standardized overall Child Opportunity Index score (national comparison)
+
+c5_COI_nat
+Overall opportunity category nationally
+
+r_COI_nat
+Percentile rank (1–100) for overall child opportunity nationally
+
+c5_COI_stt
+Overall opportunity category relative to the state
+
+r_COI_stt
+Percentile rank (1–100) for overall child opportunity within the state
+
+c5_COI_met
+Overall opportunity category relative to the metropolitan area
+
+r_COI_met
+Percentile rank (1–100) for overall child opportunity within the metropolitan area
