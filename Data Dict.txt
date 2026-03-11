@@ -3,7 +3,11 @@ The Data Dictionary below is described to the best of billy's ability
 CHOC Data
 If it ends in 365 it is the amount within the year
 
-no_show, age, GENDER, RACE, ETHNICITY are self explanatory
+no_show: whether or not they showed up to their appointment 
+age: patient's age
+GENDER: patient's gender 
+RACE: patient's race (White, Asian, Black or African American, Other)
+ETHNICITY: whether they or hispanic or not (Hispanic or Latino, Not hispanic or latino)
 APPT_WEEKDAY: Day of the week, Category Monday Tuesday ... Friday
 APPT_DAY_PART: Time of day, Category Morning Afternoon Evening
 DURATION: Minutes, Int 15 min intervals
@@ -11,16 +15,16 @@ BOOK_TO_APPT: Appointment booked X amount of days before, Int
 APPT_SEQ: Appointment Type, Category Unknown (lots of it) First Appointment Follow Up
 CANCELS_365: How many cancellations, Int
 APPTS_365: How many appointments, Int
-NOSHWOS_365: How many appointments did not show up, Int
-RECHEDS_365: How many reschedules, Int
-TELEHEALTH_IND: IDK, Bool Yes No
-MOBILITY_ABILITY_DX_IND: Are they unable to move, Bool Yes No
-MENTAL_HEALTH_DX_IND: Do they have mental health, Bool Yes No
-PRIMARY_CARE_365: Primary Care appointments, Int
+NOSHOWS_365: How many appointments did not show up, Int
+RESCHEDS_365: How many reschedules, Int
+TELEHEALTH_IND: whether appointment was online or not, Bool Yes No
+MOBILITY_ABILITY_DX_IND: Are they incapable of moving (i.e. broken leg), Bool Yes No
+MENTAL_HEALTH_DX_IND: Do they have mental health problems, Bool Yes No
+PRIMARY_CARE_365: How many primary Care appointments did they have previously, Int
 clinic_type: Appointment type, Category Specialty Primary Care
 FIRST_APP_IND: Is it their first appointment, Bool Yes No
 INSURANCE_TYPE: insurance type, Category Government Commercial Self Other/Unknown
-PED_COMORBIDTY: I dont recall, Bool Yes No
+PED_COMORBIDTY: Did they come for a previous chronic condition or some other reason/illness, Bool Yes No
 
 SVI Data
 If it starts with E it is an estimate, and M it is margin of error, Int
@@ -30,13 +34,13 @@ If it starts with S then it is a Sum of the EPLs in the section, Float
 If it starts with F its a flag for if they are within the 90th percentile, Bool Yes
 If the line includes 1. 2. 3. 4. at the start it is under the following themes
 1. Socioeconomic Status
-2. House Hold Characteristics
+2. Household Characteristics
 3. Racial & Ethnic Minority Status
 4. Housing Type/Transportation
 If there is no number at the start there is not following theme
 
-E_HU, M_HU: Housing Unit Estimate, Int
-E_HH, M_HH: Household Estimate, Int
+E_HU, M_HU: Estimated total number of housing units, Int
+E_HH, M_HH: Estimated total number of households, Int
 1. E_POV150, M_POV150, EP_POV150, MP_POV150, EPL_POV150, F_POV150: Persons below 150% poverty
 1. E_UNEMP, M_UNEMP, EP_UNEMP, MP_UNEMP, EPL_UNEMP, F_UNEMP: Civilian (16+) unemployed
 1. E_HBURD, M_BURD, EP_HBURD, MP_HBURD, EPL_HBURD, F_HBURD: Housing Burden with less than 75K annual income
@@ -58,7 +62,7 @@ E_HH, M_HH: Household Estimate, Int
 3. SPL_THEME3, RPL_THEME3, F_THEME3: Sum of series for racial & ethnic minority status (just equal to ELP_MINORITY)
 4. SPL_THEME4, RPL_THEME4, F_THEME4: Sum of series for housing type/transportation from those EPL values
 F_TOTAL Sum of the 4 F_THEME
-The rest of these variables are considered Adjunct variable (idk what that means)
+The rest of these variables are considered Adjunct variable (additional census data not related to the overall SDOH)
 E_DAYPOP: Daytime population
 E_NOINT, M_NOINT, EP_NOIT, MP_NOIT: No internet subscription
 E_AFAM, M_AFAM, EP_AFAM, MP_AFAM: Count of Black/African people
