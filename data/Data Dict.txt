@@ -1,0 +1,173 @@
+The Data Dictionary below is described to the best of billy's ability
+
+CHOC Data
+If it ends in 365 it is the amount within the year
+
+no_show: whether or not they showed up to their appointment 
+age: patient's age
+GENDER: patient's gender 
+RACE: patient's race (White, Asian, Black or African American, Other)
+ETHNICITY: whether they or hispanic or not (Hispanic or Latino, Not hispanic or latino)
+APPT_WEEKDAY: Day of the week, Category Monday Tuesday ... Friday
+APPT_DAY_PART: Time of day, Category Morning Afternoon Evening
+DURATION: Minutes, Int 15 min intervals
+BOOK_TO_APPT: Appointment booked X amount of days before, Int
+APPT_SEQ: Appointment Type, Category Unknown (lots of it) First Appointment Follow Up
+CANCELS_365: How many cancellations, Int
+APPTS_365: How many appointments, Int
+NOSHOWS_365: How many appointments did not show up, Int
+RESCHEDS_365: How many reschedules, Int
+TELEHEALTH_IND: whether appointment was online or not, Bool Yes No
+MOBILITY_ABILITY_DX_IND: Are they incapable of moving (i.e. broken leg), Bool Yes No
+MENTAL_HEALTH_DX_IND: Do they have mental health problems, Bool Yes No
+PRIMARY_CARE_365: How many primary Care appointments did they have previously, Int
+clinic_type: Appointment type, Category Specialty Primary Care
+FIRST_APP_IND: Is it their first appointment, Bool Yes No
+INSURANCE_TYPE: insurance type, Category Government Commercial Self Other/Unknown
+PED_COMORBIDTY: Did they come for a previous chronic condition or some other reason/illness, Bool Yes No
+
+SVI Data
+If it starts with E it is an estimate, and M it is margin of error, Int
+If it includes a P after E or M its percentage, Float
+If it includes a L at the end it is a percentile, Float
+If it starts with S then it is a Sum of the EPLs in the section, Float
+If it starts with F its a flag for if they are within the 90th percentile, Bool Yes
+If the line includes 1. 2. 3. 4. at the start it is under the following themes
+1. Socioeconomic Status
+2. Household Characteristics
+3. Racial & Ethnic Minority Status
+4. Housing Type/Transportation
+If there is no number at the start there is not following theme
+
+E_HU, M_HU: Estimated total number of housing units, Int
+E_HH, M_HH: Estimated total number of households, Int
+1. E_POV150, M_POV150, EP_POV150, MP_POV150, EPL_POV150, F_POV150: Persons below 150% poverty
+1. E_UNEMP, M_UNEMP, EP_UNEMP, MP_UNEMP, EPL_UNEMP, F_UNEMP: Civilian (16+) unemployed
+1. E_HBURD, M_BURD, EP_HBURD, MP_HBURD, EPL_HBURD, F_HBURD: Housing Burden with less than 75K annual income
+1. E_NOHSDP, M_NOHSDP, EP_NOHSDP, MP_NOHSDP, EPL_NOHSDP, F_NOHSDP: Person (25+) No HS Degree
+1. E_UNINSUR, M_UNINSUR, EP_UNINSUR, MP_UNINSUR, EPL_UNINSUR, F_UNINSUR: Uninsured Noninstitutionalized total population estimate
+2. E_AGE65, M_AGE65, EP_AGE65, ME_AGE65, EPL_AGE65, F_AGE65: Persons 65 and older
+2. E_AGE17, M_AGE17, EP_AGE17, ME_AGE17, EPL_AGE17, F_AGE17: Persons 17 and younger
+2. E_DISABL, M_DISABL, EP_DISABL, MP_DISABL. EPL_DISABL, F_DISABL: Civilian Noninstitutionalized with disability
+2. E_SNGPNT, M_SNGPNT, EP_SNGPNT, MP_SNGPNT, EPL_SNGPNT, F_SNGPNR: Single Parent Household with Children under 18
+2. E_LIMENG, M_LIMENG, EP_LIMENG, MP_LIMENG, EPL_LIMENG, F_LIMENG: Persons (5+) speak English less than well
+3. E_MINRTY, M_MINRTY, EP_MINRTY, ME_MINRTY, EPL_MINRTY, F_MINRTY: Not white (basically)
+4. E_MUNIT, M_MUNIT, EP_MUNIT, MP_MUNIT, EPL_MUNIT, F_MUNIT: Housing in structures with 10 or more units
+4. E_MOBILE, M_MOBILE, EP_MOBILE, MP_MOBILE, EPL_MOBILE, F_MOBILE: Mobile homes
+4. E_CROWD, M_CROWD, EP_CROWD, MP_CROWD, EPL_CROWD, F_CROWD: More people than rooms
+4. E_NOVEH, M_NOVEH, EP_NOVEH, MP_NOVEH, EPL_NOVEH, F_NOVEH: No vehicles
+4. E_GROUPQ, M_GROUPQ, EP_GROUPQ, MP_GROUPQ, ELP_GROUPQ, F_GROUPQ: Persons in group quarters
+1. SPL_THEME1, RPL_THEME1, F_THEME1: Sum of series for the socioeconomic status from those EPL values
+2. SPL_THEME2, RPL_THEME2, F_THEME2: Sum of series for the house hold characteristics from those EPL values
+3. SPL_THEME3, RPL_THEME3, F_THEME3: Sum of series for racial & ethnic minority status (just equal to ELP_MINORITY)
+4. SPL_THEME4, RPL_THEME4, F_THEME4: Sum of series for housing type/transportation from those EPL values
+F_TOTAL Sum of the 4 F_THEME
+The rest of these variables are considered Adjunct variable (additional census data not related to the overall SDOH)
+E_DAYPOP: Daytime population
+E_NOINT, M_NOINT, EP_NOIT, MP_NOIT: No internet subscription
+E_AFAM, M_AFAM, EP_AFAM, MP_AFAM: Count of Black/African people
+E_HISP, M_HISP, EP_HISP, MP_HISP: Count of Hispanic/Latino people
+E_ASIAN, M_ASIAN, EP_ASIAN, MP_ASIAN: Count of Asian people
+E_AIAN, M_AIAN, EP_AIAN, MP_AIAN: Count of American Indian/Alaskan native people
+E_NHPI, M_NHPI, EP_NHPI, MP_NHPI: Count of Native Hawaiian/Pacific Islander people
+E_TWOMORE, M_TWOMORE, EP_TWOMORE, MP_TWOMORE: Two or more races not Hispanic/Latino
+E_OTHERRACE, M_OTHERRACE, EP_OTHERRACE, MP_OTHERRACE: Some other race not listed
+
+COI Data
+If it starts with z it is a z score as our weighted average, float
+If it starts with c5 it is 5 categories, very low, low, moderate, high, very high
+If it starts with r it is scores from 1 to 100
+If it ends with nat it represents national 
+If it ends with stt it represents state
+If it ends with met it represents metro
+There are 4 overall measurements Education Domain, Health and Environment, Social and Economic Domain, and COI
+1. Education Domain
+z_ED_nat
+Standardized z-score for the Education domain (national comparison)
+
+c5_ED_nat
+Education opportunity category based on national distribution
+
+r_ED_nat
+Percentile rank (1–100) for Education opportunity nationally
+
+c5_ED_stt
+Education opportunity category relative to the state
+
+r_ED_stt
+Percentile rank (1–100) for Education opportunity within the state
+
+c5_ED_met
+Education opportunity category relative to the metropolitan area
+
+r_ED_met
+Percentile rank (1–100) for Education opportunity within the metropolitan area
+
+
+2. Health and Environment Domain
+z_HE_nat
+Standardized z-score for Health and Environment opportunity (national comparison)
+
+c5_HE_nat
+Health and Environment opportunity category nationally
+
+r_HE_nat
+Percentile rank (1–100) for Health and Environment opportunity nationally
+
+c5_HE_stt
+Health and Environment opportunity category relative to the state
+
+r_HE_stt
+Percentile rank (1–100) for Health and Environment opportunity within the state
+
+c5_HE_met
+Health and Environment opportunity category relative to the metropolitan area
+
+r_HE_met
+Percentile rank (1–100) for Health and Environment opportunity within the metropolitan area
+
+
+3. Social and Economic Domain
+z_SE_nat
+Standardized z-score for Social and Economic opportunity (national comparison)
+
+c5_SE_nat
+Social and Economic opportunity category nationally
+
+r_SE_nat
+Percentile rank (1–100) for Social and Economic opportunity nationally
+
+c5_SE_stt
+Social and Economic opportunity category relative to the state
+
+r_SE_stt
+Percentile rank (1–100) for Social and Economic opportunity within the state
+
+c5_SE_met
+Social and Economic opportunity category relative to the metropolitan area
+
+r_SE_met
+Percentile rank (1–100) for Social and Economic opportunity within the metropolitan area
+
+
+4. Overall COI (Child Opportunity Index)
+z_COI_nat
+Standardized overall Child Opportunity Index score (national comparison)
+
+c5_COI_nat
+Overall opportunity category nationally
+
+r_COI_nat
+Percentile rank (1–100) for overall child opportunity nationally
+
+c5_COI_stt
+Overall opportunity category relative to the state
+
+r_COI_stt
+Percentile rank (1–100) for overall child opportunity within the state
+
+c5_COI_met
+Overall opportunity category relative to the metropolitan area
+
+r_COI_met
+Percentile rank (1–100) for overall child opportunity within the metropolitan area
