@@ -1,10 +1,13 @@
 """
 Module for the DataPartitioner class.
 
-Handles loading and partitioning of the UDS dataset into three
-subsets based on the availability of SVI (Social Vulnerability Index)
-and COI (Child Opportunity Index) feature columns:
+Handles loading and partitioning of the UDS dataset into mutually
+exclusive subsets driven entirely by a user-supplied partition config.
+Each partition is defined by an attribute name, an output filename,
+and a filter callable — making the class agnostic to the number,
+naming, and logic of its partitions.
 
+Default partitions:
     - choc:         CHOC data only (no SVI, no COI)
     - choc_svi:     CHOC + SVI data (no COI)
     - choc_svi_coi: CHOC + SVI + COI data (all features present)
@@ -15,9 +18,10 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+
 def setup_logging(level: int = logging.DEBUG) -> None:
     """Configure the root logger's format and verbosity level.
-    
+
     Should be called once at the application entry point. Subsequent
     calls have no effect due to basicConfig's idempotent behavior.
 
@@ -35,69 +39,124 @@ def setup_logging(level: int = logging.DEBUG) -> None:
     )
 
 
+# Defined at module level to avoid the mutable-default-argument pitfall
+DEFAULT_PARTITION_CONFIG: dict[str, dict] = {
+    "choc": {
+        "filename": "choc.csv",
+        "filter": lambda df: df[df["RPL_THEME1"].isna()].dropna(axis=1),
+    },
+    "choc_svi": {
+        "filename": "choc_svi.csv",
+        "filter": lambda df: df[
+            df["r_HE_nat"].isna() & ~df["RPL_THEME1"].isna()
+        ].dropna(axis=1),
+    },
+    "choc_svi_coi": {
+        "filename": "choc_svi_coi.csv",
+        "filter": lambda df: df[
+            ~df["r_HE_nat"].isna() & ~df["RPL_THEME1"].isna()
+        ].dropna(axis=1),
+    },
+}
+
+
 class DataPartitioner:
     """Loads or creates partitioned subsets of the UDS dataset.
 
-    On first run, reads a master CSV file and splits it into three
-    mutually exclusive subsets based on the presence of SVI and COI
-    columns, then persists them as individual CSV files. On subsequent
-    runs, the pre-partitioned files are loaded directly from disk,
-    skipping the partitioning step entirely.
+    On first run, reads a master CSV file and splits it into mutually
+    exclusive subsets according to the filter callables defined in
+    partition_config, then persists them as individual CSV files. On
+    subsequent runs, the pre-partitioned files are loaded directly from
+    disk, skipping the partitioning step entirely.
+
+    The number, names, and logic of partitions are fully controlled by
+    partition_config, making the class agnostic to any specific schema.
 
     Attributes:
         data_dir (Path): Directory containing all data files.
         main_df_path (Path): Full path to the source CSV file.
-        filenames (tuple[str, ...]): Filenames for the three output partitions.
-        files (list[Path]): Full paths for the three output partitions.
-        choc (pd.DataFrame): Partition containing CHOC-only records.
-        choc_svi (pd.DataFrame): Partition containing CHOC + SVI records.
-        choc_svi_coi (pd.DataFrame): Partition containing CHOC + SVI + COI records.
+        partition_config (dict): Config mapping each attribute name to
+            its filename and filter callable.
+        file_map (dict[str, Path]): Maps each attribute name to its
+            resolved output Path.
+        <attr> (pd.DataFrame): One DataFrame attribute is registered
+            per key in partition_config. e.g. self.choc, self.choc_svi.
 
     Example:
         >>> dp = DataPartitioner(data_dir="data")
         >>> dp.load_datasets()
         >>> dp.choc.head()
+
+        >>> # Custom partitions:
+        >>> config = {
+        ...     "group_a": {
+        ...         "filename": "group_a.csv",
+        ...         "filter": lambda df: df[df["col"].isna()].dropna(axis=1),
+        ...     },
+        ...     "group_b": {
+        ...         "filename": "group_b.csv",
+        ...         "filter": lambda df: df[~df["col"].isna()].dropna(axis=1),
+        ...     },
+        ... }
+        >>> dp = DataPartitioner(data_dir="data", partition_config=config)
+        >>> dp.load_datasets()
+        >>> dp.group_a.head()
     """
 
     def __init__(
         self,
         data_dir: str = "../data",
         main_csv_filename: str = "uds_data.csv",
-        new_filenames: tuple = ("choc.csv", "choc_svi.csv", "choc_svi_coi.csv"),
+        partition_config: dict[str, dict] | None = None,
     ) -> None:
-        """Initialize DataPartitioner with directory and filename configuration.
+        """Initialize DataPartitioner with directory and partition configuration.
 
         Args:
             data_dir: Path to the directory containing data files.
                 Defaults to "../data".
             main_csv_filename: Filename of the master source CSV to
                 partition from. Defaults to "uds_data.csv".
-            new_filenames: A 3-tuple of output CSV filenames corresponding
-                to the choc, choc_svi, and choc_svi_coi partitions respectively.
-                Defaults to ("choc.csv", "choc_svi.csv", "choc_svi_coi.csv").
+            partition_config: A dict mapping attribute names to a nested
+                dict with two required keys:
+                    - "filename" (str): Output CSV filename for this partition.
+                    - "filter" (Callable[[pd.DataFrame], pd.DataFrame]):
+                        A function that accepts the raw DataFrame and returns
+                        the filtered partition.
+                Defaults to None, which applies DEFAULT_PARTITION_CONFIG.
         """
         self.data_dir = Path(data_dir)
         self.main_df_path = self.data_dir / main_csv_filename
-        self.filenames = new_filenames
-        self.files = [self.data_dir / file for file in self.filenames]
-        self.choc = pd.DataFrame()
-        self.choc_svi = pd.DataFrame()
-        self.choc_svi_coi = pd.DataFrame()
-        logger.debug("DataPartitioner initialized | data_dir=%s", self.data_dir)
+        self.partition_config = partition_config or DEFAULT_PARTITION_CONFIG
+
+        # Map each attr name to its resolved output Path
+        self.file_map: dict[str, Path] = {
+            attr: self.data_dir / cfg["filename"]
+            for attr, cfg in self.partition_config.items()
+        }
+
+        # Dynamically register each partition as an empty DataFrame
+        for attr in self.partition_config:
+            setattr(self, attr, pd.DataFrame())
+
+        logger.debug(
+            "DataPartitioner initialized | data_dir=%s | partitions=%s",
+            self.data_dir,
+            list(self.partition_config.keys()),
+        )
 
     def load_datasets(self) -> None:
         """Load partition DataFrames from disk or build them from the source CSV.
 
-        Checks whether all three partition files already exist in data_dir.
-        If they do, reads them directly into the instance attributes. If any
-        are missing, delegates to create_files() to rebuild all partitions
-        from the master CSV, then saves them via save_files().
+        Checks whether all partition files defined in file_map already exist.
+        If they do, reads them directly into their corresponding instance
+        attributes. If any are missing, delegates to create_files() to rebuild
+        all partitions from the master CSV, then persists them via save_files().
         """
-        if all(Path(file).exists() for file in self.files):
+        if all(path.exists() for path in self.file_map.values()):
             logger.info("Existing partition files found — loading from disk.")
-            self.choc, self.choc_svi, self.choc_svi_coi = (
-                pd.read_csv(file) for file in self.files
-            )
+            for attr, path in self.file_map.items():
+                setattr(self, attr, pd.read_csv(path))
+                logger.debug("Loaded '%s' | path=%s", attr, path)
         else:
             logger.warning(
                 "Partition files not found under '%s'. Rebuilding from source.",
@@ -108,54 +167,44 @@ class DataPartitioner:
             self.save_files()
 
     def create_files(self) -> None:
-        """Partition the master CSV into three mutually exclusive DataFrames.
+        """Partition the master CSV into DataFrames using configured filter callables.
 
-        Reads the source CSV from main_df_path and splits rows into three
-        subsets based on the presence of SVI (RPL_THEME1) and COI (r_HE_nat)
-        columns. Columns that are entirely NaN within each subset are dropped.
-
-        Partition logic:
-            - choc:         RPL_THEME1 is NaN   (CHOC data only)
-            - choc_svi:     RPL_THEME1 is NOT NaN AND r_HE_nat is NaN (CHOC + SVI)
-            - choc_svi_coi: RPL_THEME1 is NOT NaN AND r_HE_nat is NOT NaN (CHOC + SVI + COI)
+        Reads the source CSV from main_df_path, then applies each partition's
+        filter callable to produce the corresponding DataFrame, storing it as
+        an instance attribute under the configured name.
 
         Raises:
             FileNotFoundError: If main_df_path does not exist.
-            KeyError: If RPL_THEME1 or r_HE_nat columns are absent from the source CSV.
+            KeyError: If a filter callable references a column absent from
+                the source CSV.
         """
         logger.info("Reading source dataframe from '%s'", self.main_df_path)
         raw_df = pd.read_csv(self.main_df_path)
         logger.debug("Source dataframe loaded | shape=%s", raw_df.shape)
 
-        self.choc = raw_df[raw_df["RPL_THEME1"].isna()].dropna(axis=1)
-        logger.debug("Partition [1/3] (choc) created | shape=%s", self.choc.shape)
-
-        self.choc_svi = raw_df[
-            raw_df["r_HE_nat"].isna() & ~raw_df["RPL_THEME1"].isna()
-        ].dropna(axis=1)
-        logger.debug("Partition [2/3] (choc_svi) created | shape=%s", self.choc_svi.shape)
-
-        self.choc_svi_coi = raw_df[
-            ~raw_df["r_HE_nat"].isna() & ~raw_df["RPL_THEME1"].isna()
-        ].dropna(axis=1)
-        logger.debug(
-            "Partition [3/3] (choc_svi_coi) created | shape=%s", self.choc_svi_coi.shape
-        )
+        total = len(self.partition_config)
+        for i, (attr, cfg) in enumerate(self.partition_config.items(), start=1):
+            filtered_df = cfg["filter"](raw_df)
+            setattr(self, attr, filtered_df)
+            logger.debug(
+                "Partition [%d/%d] ('%s') created | shape=%s",
+                i, total, attr, filtered_df.shape,
+            )
 
     def save_files(self) -> None:
-        """Persist all three partition DataFrames to CSV files in data_dir.
+        """Persist all partition DataFrames to their configured CSV paths.
 
-        Writes self.choc, self.choc_svi, and self.choc_svi_coi to their
-        corresponding paths defined in self.files. Existing files at those
-        paths will be overwritten. Row indices are not written to the files.
+        Iterates over file_map, writing each partition's DataFrame to its
+        corresponding output path. Existing files will be overwritten.
+        Row indices are not written to the output files.
 
         Raises:
             OSError: If data_dir does not exist or is not writable.
         """
-        file_map = dict(zip(self.files, [self.choc, self.choc_svi, self.choc_svi_coi]))
-        for path, df in file_map.items():
+        for attr, path in self.file_map.items():
+            df = getattr(self, attr)
             df.to_csv(path, index=False)
-            logger.info("Saved | shape=%-15s -> %s", str(df.shape), path)
+            logger.info("Saved '%s' | shape=%-15s -> %s", attr, str(df.shape), path)
 
 
 if __name__ == "__main__":
