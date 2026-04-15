@@ -1,0 +1,109 @@
+---
+title: "pred_noshow_choc"
+author: "Billy Li"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup}
+choc_only = read.csv('no_shows/only_choc_clean.csv')
+library(pROC)
+#choc_only$[df$column_name < 0]
+choc_only$no_show[choc_only$no_show == 'Yes'] <- 1
+choc_only$no_show[choc_only$no_show == 'No'] <- 0
+choc_only$no_show <- as.numeric(choc_only$no_show)
+sample_indices <- sample(nrow(choc_only), size = 0.8 * nrow(choc_only))
+train <- choc_only[sample_indices, ]
+test <- choc_only[-sample_indices, ]
+```
+
+```{r intercept logistic regression model}
+intercept_model <- glm(no_show ~ 1, data = train, family = binomial)
+summary(intercept_model)
+```
+
+```{r intercept roc}
+# Predict probabilities on test data
+test_probs <- predict(intercept_model, newdata = test, type = "response")
+
+# Actual values
+actual <- test_data$no_show
+
+# Plot ROC curve
+roc_obj <- roc(actual, test_probs)
+plot(roc_obj, col = "blue", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+auc_value <- auc(roc_obj)
+cat("AUC:", round(auc_value, 2), "\n")
+```
+
+
+```{r intercept accuracy}
+# Classify with threshold 0.5
+test_preds <- ifelse(test_probs > 0.5, 1, 0)
+
+# Accuracy
+accuracy <- mean(test_preds == actual, na.rm = TRUE)
+cat("Prediction Accuracy at 0.5 Threshold", round(accuracy * 100, 2))
+```
+
+```{r intercept confusion matrix}
+# Check confusion matrix with original threshold
+confusion_original <- table(Predicted = test_preds, Actual = actual)
+print("Confusion Matrix (original threshold):")
+print(confusion_original)
+#the test predictions are only 0... why...
+#its because it never predicts 1 at the threshold of 0.5
+#every prediction is the same value
+```
+
+```{r multiple logistic model building}
+full_model <- glm(no_show ~ ., data = train, family = binomial)
+step(intercept_model, scope = list(lower=formula(intercept_model),upper=formula(full_model)), direction="both")
+```
+
+```{r stepwise made model}
+stepwise_model <- glm(formula = no_show ~ INSURANCE_TYPE + NOSHOWS_365 + APPTS_365 + 
+    APPT_WEEKDAY + RACE + FIRST_APPT_IND + RESCHEDS_365 + CANCELS_365 + 
+    ETHNICITY + DURATION + PED_COMORBIDITY + APPT_SEQ + TELEHEALTH_IND, 
+    family = binomial, data = train)
+summary(stepwise_model)
+```
+
+```{r stepwise roc}
+# Predict probabilities on test data
+test_probs <- predict(stepwise_model, newdata = test, type = "response")
+
+# Actual values
+actual <- test_data$no_show
+
+# Plot ROC curve
+roc_obj <- roc(actual, test_probs)
+plot(roc_obj, col = "blue", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+auc_value <- auc(roc_obj)
+cat("AUC:", round(auc_value, 2), "\n")
+```
+
+```{r stepwise accuracy}
+# Classify with threshold 0.5
+test_preds <- ifelse(test_probs > 0.5, 1, 0)
+
+# Accuracy
+accuracy <- mean(test_preds == actual, na.rm = TRUE)
+cat("Prediction Accuracy at 0.5 Threshold", round(accuracy * 100, 2))
+```
+
+```{r stepwise confusion matrix}
+confusion_original <- table(Predicted = test_preds, Actual = actual)
+print("Confusion Matrix")
+print(confusion_original)
+#AIC dropped by (18509 - 17301) / 18509 = 7%x
+#AUC increased by 0.01
+#Accuracy dropped by <1%
+#it predicts 0 a lot and when it predicts 1 its wrong most of the time
+#what other methods can we implement if we were to continue to use logistic regression...
+```
+
