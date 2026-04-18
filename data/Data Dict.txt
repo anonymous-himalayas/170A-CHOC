@@ -22,7 +22,7 @@ MOBILITY_ABILITY_DX_IND: Are they incapable of moving (i.e. broken leg), Bool Ye
 MENTAL_HEALTH_DX_IND: Do they have mental health problems, Bool Yes No
 PRIMARY_CARE_365: How many primary Care appointments did they have previously, Int
 clinic_type: Appointment type, Category Specialty Primary Care
-FIRST_APP_IND: Is it their first appointment, Bool Yes No
+FIRST_APPT_IND: Is it their first appointment, Bool Yes No
 INSURANCE_TYPE: insurance type, Category Government Commercial Self Other/Unknown
 PED_COMORBIDTY: Did they come for a previous chronic condition or some other reason/illness, Bool Yes No
 
