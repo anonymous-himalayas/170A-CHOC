@@ -1,0 +1,319 @@
+---
+title: "pred_noshow_choc"
+author: "Billy Li"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup}
+choc_only = read.csv('no_shows/only_choc_clean.csv')
+library(pROC)
+#choc_only$[df$column_name < 0]
+choc_only$no_show[choc_only$no_show == 'Yes'] <- 1
+choc_only$no_show[choc_only$no_show == 'No'] <- 0
+choc_only$no_show <- as.numeric(choc_only$no_show)
+sample_indices <- sample(nrow(choc_only), size = 0.8 * nrow(choc_only))
+train <- choc_only[sample_indices, ]
+test <- choc_only[-sample_indices, ]
+```
+
+```{r intercept logistic regression model}
+intercept_model <- glm(no_show ~ 1, data = train, family = binomial)
+summary(intercept_model)
+```
+
+```{r intercept roc}
+# Predict probabilities on test data
+test_probs <- predict(intercept_model, newdata = test, type = "response")
+
+# Actual values
+actual <- test$no_show
+
+# Plot ROC curve
+roc_obj <- roc(actual, test_probs)
+plot(roc_obj, col = "blue", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+auc_value <- auc(roc_obj)
+cat("AUC:", round(auc_value, 2), "\n")
+```
+
+
+```{r intercept accuracy}
+# Classify with threshold 0.5
+test_preds <- ifelse(test_probs > 0.5, 1, 0)
+
+# Accuracy
+accuracy <- mean(test_preds == actual, na.rm = TRUE)
+cat("Prediction Accuracy at 0.5 Threshold", round(accuracy * 100, 2))
+```
+
+```{r intercept confusion matrix}
+# Check confusion matrix with original threshold
+confusion_original <- table(Predicted = test_preds, Actual = actual)
+print("Confusion Matrix (original threshold):")
+print(confusion_original)
+#the test predictions are only 0... why...
+#its because it never predicts 1 at the threshold of 0.5
+#every prediction is the same value
+```
+
+```{r multiple logistic model building}
+full_model <- glm(no_show ~ ., data = train, family = binomial)
+step(intercept_model, scope = list(lower=formula(intercept_model),upper=formula(full_model)), direction="both")
+```
+
+```{r stepwise made model}
+stepwise_model <- glm(formula = no_show ~ INSURANCE_TYPE + NOSHOWS_365 + APPTS_365 + 
+    RACE + APPT_WEEKDAY + DURATION + RESCHEDS_365 + FIRST_APPT_IND + 
+    ETHNICITY + CANCELS_365 + PED_COMORBIDITY, family = binomial, 
+    data = train)
+
+summary(stepwise_model)
+```
+
+```{r stepwise roc}
+# Predict probabilities on test data
+test_probs <- predict(stepwise_model, newdata = test, type = "response")
+
+# Actual values
+actual <- test$no_show
+
+# Plot ROC curve
+roc_obj <- roc(actual, test_probs)
+plot(roc_obj, col = "blue", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+auc_value <- auc(roc_obj)
+cat("AUC:", round(auc_value, 2), "\n")
+```
+
+```{r stepwise accuracy}
+# Classify with threshold 0.5
+test_preds <- ifelse(test_probs > 0.5, 1, 0)
+
+# Accuracy
+accuracy <- mean(test_preds == actual, na.rm = TRUE)
+cat("Prediction Accuracy at 0.5 Threshold", round(accuracy * 100, 2))
+```
+
+```{r stepwise confusion matrix}
+confusion_original <- table(Predicted = test_preds, Actual = actual)
+print("Confusion Matrix")
+print(confusion_original)
+#AIC dropped by (18509 - 17301) / 18509 = 7%x
+#AUC increased by 0.01
+#Accuracy dropped by <1%
+#it predicts 0 a lot and when it predicts 1 its wrong most of the time
+#what other methods can we implement if we were to continue to use logistic regression...
+```
+
+```{r r stepwise}
+75/(75+700)
+```
+```{r p stepwise}
+75/(75+26)
+```
+
+
+```{r quad model}
+quad_model <- glm(formula = no_show ~ INSURANCE_TYPE + I(NOSHOWS_365^2) + APPTS_365 + 
+    RACE + APPT_WEEKDAY + DURATION + I(RESCHEDS_365^2) + FIRST_APPT_IND + 
+    ETHNICITY + I(CANCELS_365^2) + PED_COMORBIDITY, family = binomial, 
+    data = train)
+
+summary(quad_model)
+```
+
+
+```{r quad roc}
+# Predict probabilities on test data
+test_probs_quad <- predict(quad_model, newdata = test, type = "response")
+
+# Actual values
+actual <- test$no_show
+
+# Plot ROC curve
+roc_obj_quad <- roc(actual, test_probs_quad)
+plot(roc_obj_quad, col = "blue", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+auc_value_quad <- auc(roc_obj_quad)
+cat("AUC:", round(auc_value_quad, 2), "\n")
+```
+```{r quad acc}
+# Classify with threshold 0.5
+test_preds_quad <- ifelse(test_probs_quad > 0.5, 1, 0)
+
+# Accuracy
+accuracy_quad <- mean(test_preds_quad == actual, na.rm = TRUE)
+cat("Prediction Accuracy at 0.5 Threshold", round(accuracy_quad * 100, 2))
+```
+```{r quad conf}
+confusion_original_quad <- table(Predicted = test_preds_quad, Actual = actual)
+print("Confusion Matrix")
+print(confusion_original_quad)
+```
+
+
+```{r quasi model}
+quasi_model <- glm(formula = no_show ~ INSURANCE_TYPE + NOSHOWS_365 + APPTS_365 + 
+    APPT_WEEKDAY + RACE + RESCHEDS_365 + FIRST_APPT_IND + PED_COMORBIDITY + 
+    BOOK_TO_APPT + MOBILITY_ABILITY_DX_IND + DURATION + MENTAL_HEALTH_DX_IND, 
+    family = quasibinomial, data = train)
+
+summary(quasi_model)
+```
+
+```{r quasi roc}
+# Predict probabilities on test data
+test_probs_quasi <- predict(quasi_model, newdata = test, type = "response")
+
+# Actual values
+actual <- test$no_show
+
+# Plot ROC curve
+roc_obj_quasi <- roc(actual, test_probs_quasi)
+plot(roc_obj_quasi, col = "red", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+auc_value_quasi <- auc(roc_obj_quasi)
+cat("AUC:", round(auc_value_quasi, 2), "\n")
+```
+
+```{r quasi acc}
+# Classify with threshold 0.5
+test_preds_quasi <- ifelse(test_probs_quasi > 0.5, 1, 0)
+
+# Accuracy
+accuracy_quasi <- mean(test_preds_quasi == actual, na.rm = TRUE)
+cat("Prediction Accuracy at 0.5 Threshold", round(accuracy_quasi * 100, 2))
+```
+
+```{r quasi conf}
+confusion_original_quasi <- table(Predicted = test_preds_quasi, Actual = actual)
+print("Confusion Matrix")
+print(confusion_original_quasi)
+```
+
+```{r interatcion model}
+inter_model <- glm(formula = no_show ~ INSURANCE_TYPE + NOSHOWS_365 + APPTS_365 + 
+    RACE + APPT_WEEKDAY + DURATION + RESCHEDS_365 + FIRST_APPT_IND + 
+    ETHNICITY + CANCELS_365 + PED_COMORBIDITY + 
+    NOSHOWS_365 * APPTS_365 + APPT_WEEKDAY * DURATION, family = binomial, 
+    data = train)
+
+summary(inter_model)
+```
+
+```{r inter roc}
+# Predict probabilities on test data
+test_probs_inter <- predict(inter_model, newdata = test, type = "response")
+
+# Actual values
+actual <- test$no_show
+
+# Plot ROC curve
+roc_obj_inter <- roc(actual, test_probs_inter)
+plot(roc_obj_inter, col = "green", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+auc_value_inter <- auc(roc_obj_inter)
+cat("AUC:", round(auc_value_inter, 2), "\n")
+```
+
+```{r inter acc}
+# Classify with threshold 0.5
+test_preds_inter <- ifelse(test_probs_inter > 0.5, 1, 0)
+
+# Accuracy
+accuracy_inter <- mean(test_preds_inter == actual, na.rm = TRUE)
+cat("Prediction Accuracy at 0.5 Threshold", round(accuracy_inter * 100, 2))
+```
+
+```{r inter conf}
+confusion_original_inter <- table(Predicted = test_preds_inter, Actual = actual)
+print("Confusion Matrix")
+print(confusion_original_inter)
+```
+
+```{r combo model}
+#interactions and quadratic
+combo_model <- glm(formula = no_show ~ INSURANCE_TYPE + I(NOSHOWS_365^2) + APPTS_365 + 
+    RACE + APPT_WEEKDAY + DURATION + I(RESCHEDS_365^2) + FIRST_APPT_IND + 
+    ETHNICITY + I(CANCELS_365^2) + PED_COMORBIDITY +
+    NOSHOWS_365 * APPTS_365 + APPT_WEEKDAY * DURATION, family = binomial, 
+    data = train)
+
+summary(combo_model)
+```
+
+```{r combo roc}
+# Predict probabilities on test data
+test_probs_combo <- predict(combo_model, newdata = test, type = "response")
+
+# Actual values
+actual <- test$no_show
+
+# Plot ROC curve
+roc_obj_combo <- roc(actual, test_probs_combo)
+plot(roc_obj_combo, col = "purple", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+auc_value_combo <- auc(roc_obj_combo)
+cat("AUC:", round(auc_value_combo, 2), "\n")
+```
+
+```{r weighted model}
+table_class <- table(train$no_show)
+n_total = sum(table_class)
+raw_weights <- ifelse(train$no_show == 1,
+                 1 / table_class["1"],
+                 1 / table_class["0"])
+
+norm_weights <- raw_weights * (n_total / sum(raw_weights))
+
+weight_model <- glm(formula = no_show ~ INSURANCE_TYPE + NOSHOWS_365 + APPTS_365 + 
+    RACE + APPT_WEEKDAY + DURATION + RESCHEDS_365 + FIRST_APPT_IND + 
+    ETHNICITY + CANCELS_365 + PED_COMORBIDITY, 
+    data = train, family = quasibinomial, weights = norm_weights)
+summary(weight_model)
+```
+
+
+
+```{r weight roc}
+# Predict probabilities on test data
+test_probs_weight <- predict(weight_model, newdata = test, type = "response")
+
+# Actual values
+actual <- test$no_show
+
+# Plot ROC curve
+roc_obj_weight <- roc(actual, test_probs_weight)
+plot(roc_obj_weight, col = "orange", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+auc_value_weight <- auc(roc_obj_weight)
+cat("AUC:", round(auc_value_weight, 2), "\n")
+```
+
+
+
+
+```{r roc combination}
+#plot(roc_obj_quad, col = "blue", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+#plot(roc_obj_inter, col = "green", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+#plot(roc_obj_quasi, col = "red", main = "ROC Curve", xlim = c(1, 0), ylim = c(0, 1))
+
+plot(roc_obj_quasi, col = "red", xlim = c(1, 0), ylim = c(0, 1))
+lines(roc_obj_quad, col = "blue")
+lines(roc_obj_inter, col = "green")
+lines(roc_obj_combo, col = "purple")
+lines(roc_obj_weight, col = "orange")
+
+legend("bottomright",
+       legend = c(
+         paste0("Quasibinomial(Green):", round(auc(roc_obj_quasi), 2)),
+         paste0("Quadratic(Blue):", round(auc(roc_obj_quad), 2)),
+         paste0("Interaction(Red):", round(auc(roc_obj_inter), 2)),
+         paste0("Combo(Purple):", round(auc(roc_obj_combo), 2)),
+         paste0("Weight(Orange):", round(auc(roc_obj_weight), 2))
+       ))
+```
+
+```{r accuracy combination}
+cat("Accuracy for Quasibinomial", round(accuracy_quasi * 100, 2), "\n")
+cat("Accuracy for Quadratic", round(accuracy_quad * 100, 2), "\n")
+cat("Accuracy for Interaction", round(accuracy_inter * 100, 2))
+```
