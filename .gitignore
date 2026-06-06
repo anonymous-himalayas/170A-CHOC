@@ -1,3 +1,4 @@
 *.csv
+!fake_choc_data.csv
 *.xlsx
 *__
