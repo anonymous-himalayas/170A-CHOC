@@ -111,9 +111,71 @@ We will report feature importances for each model to identify any social biases 
 
 ## 📁 Project Structure
 
-Billy
+### Data
+Contains all datasets and data-processing scripts.
+
+> **Note:** Raw clinical datasets are excluded from this repository due to HIPAA/privacy requirements.
+
+| File | Description |
+|--------|-------------|
+| `Data Dict.txt` | Data dictionary of all our data. |
+| `data_partitioner.py` | Splits datasets into clinical and SDOH census data components. |
+| `fake_data.ipynb` | Creates a representative subsample for demonstrations without exposing protected patient information. |
+| `initial_clean_exploration.ipynb` | Performs initial cleaning, validation, and exploration of the raw clinical data. |
 
 ---
+
+### EDA
+| File | Description |
+|--------|-------------|
+| `exploration.ipynb` | Our deep dive into the raw data and trying to see trends within the data between clinical data and SDOH indices data|
+| `only_indexes.ipynb` | Our exploration in whether there is a correlation between index data and a child no-showing for their appointment |
+| `other_factors.ipynb` | Exploring other factors not limited to SDOH data to see if there are other publicly available datasets that could help in our modeling|
+
+
+---
+
+### Feature Engineering
+| File | Description |
+|--------|-------------|
+| `feature_engineering_pipe.ipynb` | INSERT HERE |
+| `XGBoost_model.ipynb` | INSERT HERE|
+
+
+---
+
+### Logistic Regression
+| File | Description |
+|--------|-------------|
+| `stepwise_logistic_regression.rmd` | INSERT HERE |
+
+
+### Decision Tree
+| File | Description |
+|--------|-------------|
+| `bayesian_weight_net.pth` | INSERT HERE (not sure if you wanted to keep/delete)|
+| `intial_tree_zac.ipynb` | INSERT HERE |
+
+### Random Forest
+| File | Description |
+|--------|-------------|
+| `initial_tree.ipynb` | Initial decision tree model development, including baseline training, hyperparameter exploration, and performance evaluation. |
+| `RFECV_tree.ipynb` | Decision tree model trained and evaluated using Recursive Feature Elimination with Cross-Validation (RFECV) to identify the most informative features and improve model performance. |
+
+
+### NN_Classifier
+| File | Description |
+|--------|-------------|
+| `nn_classifier.ipynb` | INSERT HERE |
+
+
+### Submission
+| File | Description |
+|--------|-------------|
+| `best_precision_xgb_model.pkl` | Trained XGBoost model optimized to maximize precision, minimizing false positive no-show predictions. |
+| `best_recall_xgb_model.pkl` | Trained XGBoost model optimized to maximize recall, maximizing identification of potential no-show appointments. |
+| `fake_choc_data.csv` | De-identified sample dataset used to demonstrate model predictions without exposing protected patient information. |
+| `submission.ipynb` | Demonstrates the complete prediction pipeline, including loading the trained models, generating predictions on a testing dataset, and evaluating model performance. This notebook serves as an example of the deliverable that could be provided to CHOC. |
 
 ## 🚀 Getting Started
 
