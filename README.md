@@ -36,21 +36,21 @@ Missed clinic appointments are a significant problem for both patients and healt
 
 Our approach is two-fold:
 
-1. **Exploratory Analysis** — Clean, normalize, and explore data using EDA, PCA, and clustering techniques.
-2. **Predictive Modeling** — Train and evaluate an ensemble of machine learning models including XGBoost, Random Forest and Neural Networks to predict whether a patient will be a no-show.
+1. **Exploratory Analysis** — Clean, normalize, and explore data using EDA and data engineering.
+2. **Predictive Modeling** — Train and evaluate an ensemble of machine learning models including XGBoost, Random Forest and Logistic Regression to predict whether a patient will be a no-show.
 
 ## 🔧 Technical Approach
 
 ### Modeling Pipeline
 
 - Load data from provided csv files in full batches or incrementally.
-- Apply **Principal Component Analysis (PCA)** to reduce dimensionality of dense SDOH features.
+- Apply data cleaning, partitioning and engineering.
 - Train an ensemble of supervised models:
   - **Random Forest** — for feature importance reporting
   - **XGBoost** — for flexibility and handling class imbalance
-  - **Neural Networks** — as an additional benchmark
+  - **Logistic Regression** — as an additional benchmark
 - Perform hyperparameter tuning via grid search.
-- Evaluate models using precision, ROC-AUC, and binary cross-entropy loss.
+- Evaluate models using precision/recall, ROC-AUC and F1.
 
 
 ## 📊 Datasets
@@ -71,7 +71,7 @@ All three datasets are linked by FIPS code. CHOC data contains each patient's FI
 
 ### Target Metric
 
-The primary metric is **precision** on the no-show class — we want to minimize false positives (predicting a no-show when the patient actually shows up), as this could result in legal and ethical consequences for the hospital.
+The primary metric is **precision** on the no-show class — we want to minimize false positives (predicting a no-show when the patient actually shows up), as this would waste hospital resources.
 
 ### Target Confusion Matrix
 
@@ -80,7 +80,7 @@ The primary metric is **precision** on the no-show class — we want to minimize
 | **Predicted No-Show** | > 0% | ~0% |
 | **Predicted Show** | < 12% | ~88% |
 
-> The current hospital baseline is to predict all patients will show up, resulting in a 12% false negative rate. Our model aims to match or improve on this while maintaining near-zero false positive predictions.
+> The current hospital baseline is to predict all patients will show up, resulting in a perfect precision but 0 recall. Our model aims to match or improve on recall while maintaining high precision.
 
 ### Evaluation Strategy
 
@@ -88,23 +88,16 @@ The primary metric is **precision** on the no-show class — we want to minimize
 - **Primary Metric:** Precision on the no-show class
 - **Secondary Metrics:** ROC-AUC, Binary Cross-Entropy Loss
 
-### Fairness & Bias
-
-We will report feature importances for each model to identify any social biases and share these findings with the CHOC team to ensure ethical model deployment.
-
 ---
 
 ## 🛠 Tech Stack
 
 | Category | Tools |
 |----------|-------|
-| **Database** | ClickHouse (locally hosted OLAP columnar DB) |
 | **Data Processing** | Python, Pandas, NumPy |
 | **Visualization** | Matplotlib, Seaborn |
 | **Statistical Analysis** | R |
 | **Machine Learning** | Scikit-Learn, XGBoost |
-| **Dimensionality Reduction** | PCA (Scikit-Learn) |
-| **Dashboard (Optional)** | Streamlit |
 | **Version Control** | Git, GitHub |
 
 ---
@@ -119,7 +112,7 @@ Contains all datasets and data-processing scripts.
 | File | Description |
 |--------|-------------|
 | `Data Dict.txt` | Data dictionary of all our data. |
-| `data_partitioner.py` | Splits datasets into clinical and SDOH census data components. |
+| `data_partitioner.py` | Partitions datasets into 3 sets by which SDOH index is missing. |
 | `fake_data.ipynb` | Creates a representative subsample for demonstrations without exposing protected patient information. |
 | `initial_clean_exploration.ipynb` | Performs initial cleaning, validation, and exploration of the raw clinical data. |
 
@@ -138,9 +131,7 @@ Contains all datasets and data-processing scripts.
 ### Feature Engineering
 | File | Description |
 |--------|-------------|
-| `feature_engineering_pipe.ipynb` | INSERT HERE |
-| `XGBoost_model.ipynb` | INSERT HERE|
-
+| `feature_engineering_pipe.ipynb` | Data pipeline that abstracts away sensitive EHR data that corresponds to a patient for easier processing and data handling |
 
 ---
 
@@ -149,26 +140,14 @@ Contains all datasets and data-processing scripts.
 |--------|-------------|
 | `stepwise_logistic_regression.rmd` | This file was made to leverage the use of logistic regression for only CHOC Data. This implements 5 different models all originating from the baseline stepwise inplemented model: Quadratic Terms, Interaction Terms, Quasibinomial, Combo (Quadratic and Interaction Terms), and Weighted. Every model has a mapped ROC Curve that was plotted into one plot to show that there was no improvement from the orignal stepwise model. |
 
-
-### Decision Tree
-| File | Description |
-|--------|-------------|
-| `bayesian_weight_net.pth` | INSERT HERE (not sure if you wanted to keep/delete)|
-| `intial_tree_zac.ipynb` | INSERT HERE |
+---
 
 ### Random Forest
 | File | Description |
 |--------|-------------|
 | `initial_tree.ipynb` | Initial decision tree model development, including baseline training, hyperparameter exploration, and performance evaluation. |
 | `RFECV_tree.ipynb` | Decision tree model trained and evaluated using Recursive Feature Elimination with Cross-Validation (RFECV) to identify the most informative features and improve model performance. |
-
-
-### NN_Classifier
-| File | Description |
-|--------|-------------|
-| `nn_classifier.ipynb` | INSERT HERE |
-
-
+---
 ### Submission
 | File | Description |
 |--------|-------------|
@@ -176,6 +155,12 @@ Contains all datasets and data-processing scripts.
 | `best_recall_xgb_model.pkl` | Trained XGBoost model optimized to maximize recall, maximizing identification of potential no-show appointments. |
 | `fake_choc_data.csv` | De-identified sample dataset used to demonstrate model predictions without exposing protected patient information. |
 | `submission.ipynb` | Demonstrates the complete prediction pipeline, including loading the trained models, generating predictions on a testing dataset, and evaluating model performance. This notebook serves as an example of the deliverable that could be provided to CHOC. |
+
+---
+### XGBoost Model
+| File | Description |
+|--------|-------------|
+| `XGBoost_model.ipynb` | Training and exploratory notebook for hyperparameter tuning and evaluating an array of XGBoost models|
 
 ## 🚀 Getting Started
 
@@ -194,6 +179,13 @@ cd 170A-CHOC
 # Install Python dependencies
 pip install -r requirements.txt
 ```
+
+### Sample
+To run the sample of how our model would perform on a synthetic dataset:
+- navigate to `submission` directory
+- open `submission.ipynb` and connect to python kernel
+- run all cells in the Jupyter Notebook
+
 
 ## 🤝 Contributing
 This is an academic research project in partnership with CHOC. If you are a team member:
