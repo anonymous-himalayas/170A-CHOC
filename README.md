@@ -147,7 +147,7 @@ Contains all datasets and data-processing scripts.
 ### Logistic Regression
 | File | Description |
 |--------|-------------|
-| `stepwise_logistic_regression.rmd` | INSERT HERE |
+| `stepwise_logistic_regression.rmd` | This file was made to leverage the use of logistic regression for only CHOC Data. This implements 5 different models all originating from the baseline stepwise inplemented model: Quadratic Terms, Interaction Terms, Quasibinomial, Combo (Quadratic and Interaction Terms), and Weighted. Every model has a mapped ROC Curve that was plotted into one plot to show that there was no improvement from the orignal stepwise model. |
 
 
 ### Decision Tree
